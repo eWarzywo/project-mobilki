@@ -10,8 +10,11 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.navigation.NavHostController
 import com.example.forttask.ui.theme.ForttaskTheme
+import androidx.navigation.compose.rememberNavController
+
+import com.example.forttask.ui.components.NavigationBar
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -19,10 +22,19 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             ForttaskTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
+                val navController = rememberNavController()
+
+                Scaffold(
+                    modifier = Modifier.fillMaxSize(),
+                    bottomBar = {
+                        ForttaskApp(navController = navController)
+                    }
+                ) { innerPadding ->
+                    Text(
+                        text = "sybau",
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(innerPadding)
                     )
                 }
             }
@@ -31,17 +43,6 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    ForttaskTheme {
-        Greeting("Android")
-    }
+fun ForttaskApp(navController: NavHostController) {
+    NavigationBar(navController = navController)
 }
