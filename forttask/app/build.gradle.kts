@@ -61,4 +61,5 @@ dependencies {
     implementation(libs.androidx.navigation.ui)
     implementation(libs.androidx.navigation.fragment)
     implementation(libs.androidx.material.icons.extended)
+    implementation(libs.androidx.material3.window.size)
 }
