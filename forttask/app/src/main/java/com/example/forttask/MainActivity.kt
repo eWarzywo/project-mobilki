@@ -10,11 +10,13 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.NavHostController
 import com.example.forttask.ui.theme.ForttaskTheme
 import androidx.navigation.compose.rememberNavController
 
 import com.example.forttask.ui.components.NavigationBar
+import com.example.forttask.ui.navigation.AppNavHost
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -30,11 +32,12 @@ class MainActivity : ComponentActivity() {
                         ForttaskApp(navController = navController)
                     }
                 ) { innerPadding ->
-                    Text(
-                        text = "sybau",
+                    AppNavHost(
                         modifier = Modifier
                             .fillMaxSize()
-                            .padding(innerPadding)
+                            .padding(innerPadding),
+                        navController = navController,
+                        startDestination = "overview"
                     )
                 }
             }
@@ -45,4 +48,31 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun ForttaskApp(navController: NavHostController) {
     NavigationBar(navController = navController)
+}
+
+@Preview(
+    showBackground = true,
+    widthDp = 360,
+    heightDp = 640,
+)
+@Composable
+fun AppPreview() {
+    val navController = rememberNavController()
+
+    ForttaskTheme {
+        Scaffold(
+            modifier = Modifier.fillMaxSize(),
+            bottomBar = {
+                ForttaskApp(navController = navController)
+            }
+        ) { innerPadding ->
+            AppNavHost(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding),
+                navController = navController,
+                startDestination = "overview"
+            )
+        }
+    }
 }

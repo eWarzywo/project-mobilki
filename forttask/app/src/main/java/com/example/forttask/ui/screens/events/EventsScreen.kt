@@ -1,4 +1,4 @@
-package com.example.forttask.ui.screens.overview
+package com.example.forttask.ui.screens.events
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -8,11 +8,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun OverviewScreen(
+fun EventsScreen(
     modifier: Modifier = Modifier
 ) {
     Text(
-        text = "Overview Screen",
+        text = "Events Screen",
         modifier = modifier
             .fillMaxSize()
             .padding(16.dp)
