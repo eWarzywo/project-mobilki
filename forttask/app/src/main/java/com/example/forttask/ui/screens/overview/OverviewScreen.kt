@@ -27,6 +27,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import com.example.forttask.network.ApiClient
+import com.example.forttask.network.ApiService
 import com.example.forttask.network.AuthManager
 
 @Composable
@@ -81,7 +82,14 @@ fun OverviewScreen(
                     if (result.success) {
                         Toast.makeText(context, "Login success", Toast.LENGTH_SHORT).show()
                         cookiesInfo = ApiClient.cookieJar.getCookiesAsString()
-                        message = "Login successful!"
+                        message = "Login successful"
+                        val eventsData = ApiService.getProtectedData(context)
+                        if (eventsData != null) {
+                            message += "\nProtected data loaded successfully."
+                            message += "\nEvents Data: $eventsData"
+                        } else {
+                            message += "\nFailed to load protected data."
+                        }
                     } else {
                         val errorMessage = result.errorMessage ?: "Unknown error occurred"
                         Toast.makeText(context, errorMessage, Toast.LENGTH_LONG).show()
