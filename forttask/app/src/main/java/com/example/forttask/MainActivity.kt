@@ -19,6 +19,8 @@ import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.ui.unit.dp
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.compose.runtime.getValue
 
 import com.example.forttask.ui.navigation.AppNavHost
 import com.example.forttask.ui.components.NavigationStateKeeper
@@ -33,10 +35,12 @@ class MainActivity : ComponentActivity() {
             ForttaskTheme {
                 val navController = rememberNavController()
                 val windowSize = calculateWindowSizeClass(this)
+                val backStackEntry by navController.currentBackStackEntryAsState()
 
                 ForttaskApp(
                     navController = navController,
-                    windowSize = windowSize
+                    windowSize = windowSize,
+                    backStackEntry = backStackEntry
                 )
             }
         }
@@ -46,26 +50,30 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun ForttaskApp(
     navController: NavHostController,
-    windowSize: WindowSizeClass
+    windowSize: WindowSizeClass,
+    backStackEntry: androidx.navigation.NavBackStackEntry? = null
 ) {
     when (windowSize.widthSizeClass) {
-        WindowWidthSizeClass.Compact -> ForttaskVerticalApp(navController)
-        WindowWidthSizeClass.Medium, WindowWidthSizeClass.Expanded -> ForttaskHorizontalApp(navController)
-        else -> ForttaskVerticalApp(navController)
+        WindowWidthSizeClass.Compact -> ForttaskVerticalApp(navController, backStackEntry)
+        WindowWidthSizeClass.Medium, WindowWidthSizeClass.Expanded -> ForttaskHorizontalApp(navController, backStackEntry)
+        else -> ForttaskVerticalApp(navController, backStackEntry)
     }
 }
 
 @Composable
 fun ForttaskVerticalApp(
-    navController: NavHostController
+    navController: NavHostController,
+    backStackEntry: androidx.navigation.NavBackStackEntry? = null
 ) {
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         bottomBar = {
-            NavigationStateKeeper(
-                navController = navController,
-                isHorizontal = false
-            )
+            if (backStackEntry?.destination?.route != NavigationItem.Login.route) {
+                NavigationStateKeeper(
+                    navController = navController,
+                    isHorizontal = false
+                )
+            }
         }
     ) { innerPadding ->
         AppNavHost(
@@ -73,14 +81,15 @@ fun ForttaskVerticalApp(
                 .fillMaxSize()
                 .padding(innerPadding),
             navController = navController,
-            startDestination = NavigationItem.Overview.route
+            startDestination = NavigationItem.Login.route
         )
     }
 }
 
 @Composable
 fun ForttaskHorizontalApp(
-    navController: NavHostController
+    navController: NavHostController,
+    backStackEntry: androidx.navigation.NavBackStackEntry? = null
 ) {
     Scaffold(
         modifier = Modifier.fillMaxSize()
@@ -90,17 +99,18 @@ fun ForttaskHorizontalApp(
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
-            NavigationStateKeeper(
-                navController = navController,
-                isHorizontal = true
-            )
-
+            if (backStackEntry?.destination?.route != NavigationItem.Login.route) {
+                NavigationStateKeeper(
+                    navController = navController,
+                    isHorizontal = true
+                )
+            }
             AppNavHost(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(horizontal = 16.dp),
                 navController = navController,
-                startDestination = NavigationItem.Overview.route
+                startDestination = NavigationItem.Login.route
             )
         }
     }
@@ -139,4 +149,3 @@ fun AppPreviewHorizontal() {
         windowSize = windowSize
     )
 }
-
