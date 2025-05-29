@@ -52,7 +52,6 @@ import com.example.forttask.network.ApiService.getProtectedData
 import com.example.forttask.network.SocketManager
 import com.example.forttask.network.UserDataManager
 import kotlinx.coroutines.launch
-import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import timber.log.Timber
 

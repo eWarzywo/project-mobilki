@@ -31,11 +31,10 @@ import com.example.forttask.ui.navigation.NavigationItem
 
 @Composable
 fun LoginScreen(
-    modifier: Modifier = Modifier,
     navController: NavController
 ) {
     val scope = rememberCoroutineScope()
-    var message by remember { mutableStateOf("Login") }
+    val message by remember { mutableStateOf("Login") }
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     val context = LocalContext.current
