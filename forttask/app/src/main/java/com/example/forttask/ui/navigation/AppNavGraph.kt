@@ -9,9 +9,9 @@ import androidx.navigation.compose.composable
 import com.example.forttask.ui.screens.overview.OverviewScreen
 import com.example.forttask.ui.screens.events.EventsScreen
 import com.example.forttask.ui.screens.login.LoginScreen
-// import com.example.forttask.ui.screens.chores.ChoresScreen
-// import com.example.forttask.ui.screens.bills.BillsScreen
-// import com.example.forttask.ui.screens.shoppinglist.ShoppingListScreen
+import com.example.forttask.ui.screens.bills.BillsScreen
+import com.example.forttask.ui.screens.shoppinglist.ShoppingListScreen
+import com.example.forttask.ui.screens.chores.ChoresScreen
 
 enum class Screen {
     OVERVIEW,
@@ -52,13 +52,13 @@ fun AppNavHost(
             EventsScreen()
         }
         composable(NavigationItem.Chores.route) {
-            // ChoresScreen() // todo
+            ChoresScreen()
         }
         composable(NavigationItem.Bills.route) {
-            // BillsScreen() // todo
+            BillsScreen()
         }
         composable(NavigationItem.ShoppingList.route) {
-            // ShoppingListScreen() // todo
+            ShoppingListScreen()
         }
     }
 }

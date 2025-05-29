@@ -1,4 +1,4 @@
-package com.example.forttask.ui.screens.events
+package com.example.forttask.ui.screens.bills
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
@@ -16,16 +16,16 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Event
-import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.AttachMoney
+import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Receipt
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -34,9 +34,12 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -46,23 +49,19 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.ui.unit.sp
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.rememberCoroutineScope
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.decodeFromString
-import kotlinx.serialization.json.Json
 import com.example.forttask.network.ApiService.getProtectedData
 import com.example.forttask.network.SocketManager
 import com.example.forttask.network.UserDataManager
 import kotlinx.coroutines.launch
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.json.Json
+import timber.log.Timber
 
 @Composable
-fun EventsScreen(
+fun BillsScreen(
     modifier: Modifier = Modifier
 ) {
-    var events by remember { mutableStateOf<List<Event>>(emptyList()) }
+    var bills by remember { mutableStateOf<List<Bill>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
     var error by remember { mutableStateOf<String?>(null) }
     val context = LocalContext.current
@@ -73,45 +72,101 @@ fun EventsScreen(
         isLenient = true
     }
 
-    suspend fun fetchEvents() {
+    suspend fun fetchBills(limit: Int = 10, skip: Int = 0) {
+        Timber.i("💰 Starting to fetch bills with limit=$limit, skip=$skip")
         isLoading = true
+        
         try {
-            val response = getProtectedData(context, "/events/get")
-            if (response != null) {
-                val eventsResponse = json.decodeFromString<EventsResponse>(response)
-                events = eventsResponse.events
-            } else {
-                error = "No events data found"
+            val endpoint = "bill?skip=$skip"
+            Timber.d("📊 Fetching bills from endpoint: $endpoint")
+            
+            val response = getProtectedData(context, endpoint)
+            
+            response?.let { jsonString ->
+                try {
+                    Timber.d("🔍 Parsing bills response")
+                    Timber.d("📄 Raw response: ${jsonString.take(200)}${if(jsonString.length > 200) "..." else ""}")
+                    
+                    bills = json.decodeFromString<List<Bill>>(jsonString)
+                    val billCount = bills.size
+                    
+                    Timber.i("✨ Successfully loaded $billCount bills (limit=$limit, skip=$skip)")
+                    if (billCount > 0) {
+                        val billSummary = bills.joinToString(", ") { "${it.name} (${it.getFormattedAmount()})" }
+                        Timber.d("💰 Bills: $billSummary")
+                        
+                        val overdueBills = bills.filter { it.isOverdue() }
+                        if (overdueBills.isNotEmpty()) {
+                            Timber.w("⚠️ Found ${overdueBills.size} overdue bills: ${overdueBills.joinToString(", ") { it.name }}")
+                        }
+                        
+                        val upcomingBills = bills.filter { !it.isOverdue() && it.getDaysUntilDue() <= 7 }
+                        if (upcomingBills.isNotEmpty()) {
+                            Timber.i("📅 Found ${upcomingBills.size} bills due within 7 days: ${upcomingBills.joinToString(", ") { "${it.name} (${it.getDaysUntilDue()} days)" }}")
+                        }
+                    } else {
+                        Timber.d("💰 No bills found for the given parameters")
+                    }
+                    
+                    error = null
+                } catch (e: Exception) {
+                    Timber.e(e, "⚠️ JSON parsing error for bills data")
+                    error = "Error parsing bills: ${e.localizedMessage}"
+                }
+            } ?: run {
+                Timber.e("⚠️ Failed to fetch bills - null response")
+                error = "No bills data found"
             }
         } catch (e: Exception) {
-            error = "Error parsing events: ${e.message}"
+            Timber.e(e, "⚠️ Error loading bills")
+            error = "Error loading bills: ${e.localizedMessage}"
         } finally {
             isLoading = false
+            Timber.d("📊 Bills fetch completed. Loading: $isLoading, Error: $error, Bills count: ${bills.size}")
         }
     }
 
     LaunchedEffect(key1 = true) {
+        Timber.i("🚀 BillsScreen LaunchedEffect triggered")
+        
         val householdId = UserDataManager.getUserHouseholdId(context)
+        Timber.d("🏠 Retrieved household ID: $householdId")
+        
         if (householdId != null) {
             if (!SocketManager.isInitialized()) {
+                Timber.i("🔌 Initializing SocketManager for bills")
                 SocketManager.initialize(householdId)
 
-                SocketManager.setUpdateEventsCallback {
+                SocketManager.setUpdateBillsCallback {
+                    Timber.i("📡 Received update-bills socket event")
                     coroutineScope.launch {
-                        fetchEvents()
+                        fetchBills()
+                    }
+                }
+            } else {
+                Timber.d("🔌 SocketManager already initialized, setting bills callback")
+                SocketManager.setUpdateBillsCallback {
+                    Timber.i("📡 Received update-bills socket event")
+                    coroutineScope.launch {
+                        fetchBills()
                     }
                 }
             }
+        } else {
+            Timber.e("⚠️ No household ID found, cannot initialize socket")
         }
 
-        fetchEvents()
+        fetchBills()
     }
 
     DisposableEffect(key1 = Unit) {
+        Timber.d("🧹 BillsScreen DisposableEffect setup")
         onDispose {
+            Timber.d("🧹 BillsScreen disposing")
             coroutineScope.launch {
                 val householdId = UserDataManager.getUserHouseholdId(context)
                 if (householdId != null && SocketManager.isInitialized()) {
+                    Timber.d("🔌 Disconnecting from socket")
                     SocketManager.disconnect(householdId)
                 }
             }
@@ -124,7 +179,7 @@ fun EventsScreen(
             .padding(16.dp)
     ) {
         Text(
-            text = "Events",
+            text = "Bills",
             style = MaterialTheme.typography.headlineLarge,
             fontWeight = FontWeight.Bold,
             modifier = Modifier.padding(bottom = 16.dp)
@@ -176,7 +231,7 @@ fun EventsScreen(
                     }
                 }
             }
-            events.isEmpty() -> {
+            bills.isEmpty() -> {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(
@@ -188,20 +243,20 @@ fun EventsScreen(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Icon(
-                            imageVector = Icons.Default.Event,
+                            imageVector = Icons.Default.Receipt,
                             contentDescription = null,
                             modifier = Modifier.size(48.dp),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                         )
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
-                            text = "No events found",
+                            text = "No bills found",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Medium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Text(
-                            text = "Events will appear here when they are created",
+                            text = "Bills will appear here when they are created",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                         )
@@ -209,30 +264,30 @@ fun EventsScreen(
                 }
             }
             else -> {
-                EventsList(events = events, modifier = modifier)
+                BillsList(bills = bills, modifier = modifier)
             }
         }
     }
 }
 
 @Composable
-fun EventsList(
-    events: List<Event>,
+fun BillsList(
+    bills: List<Bill>,
     modifier: Modifier = Modifier
 ) {
     LazyColumn(
         modifier = modifier.fillMaxSize(),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        items(events) { event ->
-            EventCard(event = event)
+        items(bills) { bill ->
+            BillCard(bill = bill)
         }
     }
 }
 
 @Composable
-fun EventCard(
-    event: Event,
+fun BillCard(
+    bill: Bill,
     modifier: Modifier = Modifier
 ) {
     var expanded by remember { mutableStateOf(false) }
@@ -241,13 +296,20 @@ fun EventCard(
         label = "rotation_animation"
     )
 
+    val isOverdue = bill.isOverdue()
+    val daysUntilDue = bill.getDaysUntilDue()
+
     Card(
         modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
             .clickable { expanded = !expanded },
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
+            containerColor = if (isOverdue) {
+                MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f)
+            } else {
+                MaterialTheme.colorScheme.surfaceContainerHigh
+            }
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
@@ -258,30 +320,76 @@ fun EventCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = event.name,
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = bill.name,
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier.weight(1f)
+                        )
+                        if (isOverdue) {
+                            Icon(
+                                imageVector = Icons.Default.Warning,
+                                contentDescription = "Overdue",
+                                modifier = Modifier.size(20.dp),
+                                tint = MaterialTheme.colorScheme.error
+                            )
+                        }
+                    }
                     Spacer(modifier = Modifier.height(4.dp))
                     Row(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Icon(
-                            imageVector = Icons.Default.Event,
+                            imageVector = Icons.Default.CalendarToday,
                             contentDescription = null,
                             modifier = Modifier.size(16.dp),
-                            tint = MaterialTheme.colorScheme.primary
+                            tint = if (isOverdue) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
                         )
                         Spacer(modifier = Modifier.padding(horizontal = 4.dp))
                         Text(
-                            text = event.getFormattedDate(),
+                            text = "Due: ${bill.getFormattedDueDate()}",
                             style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.primary,
+                            color = if (isOverdue) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
                             fontWeight = FontWeight.Medium
+                        )
+                        if (!isOverdue && daysUntilDue <= 7) {
+                            Text(
+                                text = " (${daysUntilDue} days)",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.tertiary,
+                                fontWeight = FontWeight.Medium
+                            )
+                        } else if (isOverdue) {
+                            Text(
+                                text = " (${Math.abs(daysUntilDue)} days overdue)",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.error,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.AttachMoney,
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp),
+                            tint = MaterialTheme.colorScheme.tertiary
+                        )
+                        Spacer(modifier = Modifier.padding(horizontal = 4.dp))
+                        Text(
+                            text = bill.getFormattedAmount(),
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.tertiary,
+                            fontWeight = FontWeight.Bold
                         )
                     }
                 }
@@ -315,46 +423,27 @@ fun EventCard(
                         color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
                     )
 
-                    if (event.description.isNotBlank()) {
+                    if (bill.description.isNotBlank()) {
                         DetailRow(
                             icon = Icons.Default.Description,
                             label = "Description",
-                            value = event.description
+                            value = bill.description
                         )
                         Spacer(modifier = Modifier.height(16.dp))
                     }
 
-                    if (event.location.isNotBlank()) {
-                        DetailRow(
-                            icon = Icons.Default.LocationOn,
-                            label = "Location",
-                            value = event.location
-                        )
-                        Spacer(modifier = Modifier.height(16.dp))
-                    }
-
-                    val createdAt = try {
-                        val inputFormat = java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", java.util.Locale.getDefault())
-                        val outputFormat = java.text.SimpleDateFormat("dd MMM yyyy 'at' HH:mm", java.util.Locale.getDefault())
-                        val date = inputFormat.parse(event.createdAt)
-                        date?.let { outputFormat.format(it) } ?: "Unknown"
-                    } catch (e: Exception) {
-                        "Unknown"
-                    }
-                    
                     DetailRow(
-                        icon = Icons.Default.Event,
+                        icon = Icons.Default.CalendarToday,
                         label = "Created",
-                        value = createdAt
+                        value = bill.getFormattedCreatedDate()
                     )
 
-                    val attendees = event.getAttendeeNames()
-                    if (attendees.isNotEmpty()) {
+                    bill.createdBy?.let { creator ->
                         Spacer(modifier = Modifier.height(16.dp))
                         DetailRow(
                             icon = Icons.Default.Person,
-                            label = "Attendees",
-                            value = attendees.joinToString(", ")
+                            label = "Created by",
+                            value = creator.username
                         )
                     }
                 }

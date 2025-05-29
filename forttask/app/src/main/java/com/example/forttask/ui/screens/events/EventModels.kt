@@ -16,17 +16,10 @@ data class Event(
     val name: String,
     val description: String,
     val date: String,
-    val cycle: Int? = null,
-    val repeatCount: Int? = null,
     val location: String,
     val createdAt: String,
-    val updatedAt: String? = null,
-    val createdById: Int,
-    val householdId: Int? = null,
-    val parentEventId: Int? = null,
-    val attendees: List<Attendee>? = null
+    val attendees: List<Attendee>
 ) {
-    // Format the date to show only day, month, and year
     fun getFormattedDate(): String {
         val inputFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault())
         val outputFormat = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
@@ -39,9 +32,8 @@ data class Event(
         }
     }
 
-    // Get list of attendee usernames
     fun getAttendeeNames(): List<String> {
-        return attendees?.mapNotNull { it.user?.username } ?: emptyList()
+        return attendees.mapNotNull { it.user?.username }
     }
 }
 
