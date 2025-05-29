@@ -40,15 +40,16 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.unit.sp
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.rememberCoroutineScope
 // nie usuwac tych importow, bo niby nic nie robia ale bez nich nie dziala XDD
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import com.example.forttask.network.ApiService.getProtectedData
-
-/* example events output
-{"events":[{"id":1,"name":"cpanie","description":"cpanie w sgb","date":"2025-05-29T00:00:00.000Z","cycle":0,"repeatCount":0,"location":"sgb","createdAt":"2025-05-29T07:54:39.193Z","updatedAt":"2025-05-29T07:54:39.193Z","createdById":1,"householdId":1,"parentEventId":null,"attendees":[{"eventId":1,"userId":1,"user":{"id":1,"username":"emati_emati","email":"emati@emati.emati","passwordHash":"$2b$10$AH3MSpx3v1PJ2RB2Lzu7Mubocs8ZgjsaWW6RIyRc.szzY/3TlrW86","createdAt":"2025-05-22T12:26:58.347Z","profilePictureId":null,"householdId":1}}]}],"count":1}
- */
+import com.example.forttask.network.SocketManager
+import com.example.forttask.network.UserDataManager
+import kotlinx.coroutines.launch
 
 @Composable
 fun EventsScreen(
@@ -58,13 +59,15 @@ fun EventsScreen(
     var isLoading by remember { mutableStateOf(true) }
     var error by remember { mutableStateOf<String?>(null) }
     val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
 
     val json = Json {
         ignoreUnknownKeys = true
         isLenient = true
     }
 
-    LaunchedEffect(key1 = true) {
+    suspend fun fetchEvents() {
+        isLoading = true
         try {
             val response = getProtectedData(context, "/events/get")
             if (response != null) {
@@ -77,6 +80,34 @@ fun EventsScreen(
             error = "Error parsing events: ${e.message}"
         } finally {
             isLoading = false
+        }
+    }
+
+    LaunchedEffect(key1 = true) {
+        val householdId = UserDataManager.getUserHouseholdId(context)
+        if (householdId != null) {
+            if (!SocketManager.isInitialized()) {
+                SocketManager.initialize(householdId)
+
+                SocketManager.setUpdateEventsCallback {
+                    coroutineScope.launch {
+                        fetchEvents()
+                    }
+                }
+            }
+        }
+
+        fetchEvents()
+    }
+
+    DisposableEffect(key1 = Unit) {
+        onDispose {
+            coroutineScope.launch {
+                val householdId = UserDataManager.getUserHouseholdId(context)
+                if (householdId != null && SocketManager.isInitialized()) {
+                    SocketManager.disconnect(householdId)
+                }
+            }
         }
     }
 
@@ -116,6 +147,7 @@ fun EventsList(
                 text = "Events",
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold,
+                fontSize = 24.sp
             )
         }
         items(events) { event ->
