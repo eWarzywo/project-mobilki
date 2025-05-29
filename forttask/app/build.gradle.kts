@@ -64,4 +64,5 @@ dependencies {
     implementation(libs.androidx.material3.window.size)
     implementation(libs.com.squareup.retrofit2)
     implementation(libs.com.squareup.retrofit2.converter.gson)
+    implementation(libs.kotlinx.serialization.json)
 }
