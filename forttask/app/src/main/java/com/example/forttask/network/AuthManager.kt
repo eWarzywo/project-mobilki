@@ -13,7 +13,7 @@ data class LoginResult(
 )
 
 object AuthManager {
-    private const val SERVER_IP = "192.168.1.35"
+    private const val SERVER_IP = "10.90.83.206"
     private const val SERVER_PORT = "3000"
     private const val SERVER_URL = "http://$SERVER_IP:$SERVER_PORT"
 

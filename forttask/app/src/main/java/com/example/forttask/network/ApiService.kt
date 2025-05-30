@@ -10,7 +10,7 @@ object ApiService {
     suspend fun getProtectedData(context: Context, uri: String): String? {
         return withContext(Dispatchers.IO) {
             val client = ApiClient.getHttpClient()
-            val fullUrl = "http://192.168.1.35:3000/api/$uri"
+            val fullUrl = "http://10.90.83.206:3000/api/$uri"
             val request = ApiClient.getAuthenticatedRequest(context, fullUrl)
             
             Timber.d("🔄 API Request: GET $fullUrl")
