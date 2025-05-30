@@ -93,7 +93,7 @@ private fun CredentialsList(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        items(credentials) { credential ->
+        items(credentials, key = { it.id }) { credential ->
             CredentialItem(
                 credential = credential,
                 onCredentialSelected = onCredentialSelected,
