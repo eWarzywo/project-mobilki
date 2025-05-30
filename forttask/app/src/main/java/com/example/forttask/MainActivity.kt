@@ -68,7 +68,8 @@ fun ForttaskVerticalApp(
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         bottomBar = {
-            if (backStackEntry?.destination?.route != NavigationItem.Login.route) {
+            if (backStackEntry?.destination?.route != NavigationItem.Login.route &&
+                backStackEntry?.destination?.route != NavigationItem.PasswordVault.route) {
                 NavigationStateKeeper(
                     navController = navController,
                     isHorizontal = false
@@ -99,7 +100,8 @@ fun ForttaskHorizontalApp(
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
-            if (backStackEntry?.destination?.route != NavigationItem.Login.route) {
+            if (backStackEntry?.destination?.route != NavigationItem.Login.route &&
+                backStackEntry?.destination?.route != NavigationItem.PasswordVault.route) {
                 NavigationStateKeeper(
                     navController = navController,
                     isHorizontal = true

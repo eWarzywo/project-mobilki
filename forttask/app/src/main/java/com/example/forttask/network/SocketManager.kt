@@ -14,7 +14,7 @@ object SocketManager {
 
     fun initialize(householdId: String) {
         try {
-            socket = IO.socket("http://192.168.1.35:3000")
+            socket = IO.socket("http://10.90.83.206:3000")
 
             socket.on(Socket.EVENT_CONNECT) {
                 socket.emit("join-household", householdId)

@@ -13,7 +13,7 @@ data class LoginResult(
 )
 
 object AuthManager {
-    private const val SERVER_IP = "192.168.1.35"
+    private const val SERVER_IP = "10.90.83.206"
     private const val SERVER_PORT = "3000"
     private const val SERVER_URL = "http://$SERVER_IP:$SERVER_PORT"
 
@@ -30,7 +30,7 @@ object AuthManager {
                 if (response.isSuccessful) {
                     val body = response.body()?.string()
                     val cookieHeader = response.headers("Set-Cookie")
-                    val csrfCookie = cookieHeader.firstOrNull { it.startsWith("next-auth.csrf-token=") }
+                    val csrfCookie = cookieHeader.firstOrNull { it.startsWith("next-auth.csrf-token") }
                         ?.split(";")?.firstOrNull()
                     return@withContext Pair(body?.let {
                         Regex("\"csrfToken\":\"([^\"]+)\"").find(it)?.groupValues?.get(1)
@@ -51,6 +51,7 @@ object AuthManager {
             val (csrfToken, csrfCookie) = csrf(context)
 
             if (csrfToken == null || csrfCookie == null) {
+                ApiClient.cookieJar.clear()
                 return@withContext LoginResult(false, "Failed to retrieve CSRF token or cookie.")
             }
 
@@ -69,15 +70,21 @@ object AuthManager {
 
             try {
                 val response = client.newCall(request).execute()
-                if (response.isSuccessful) {
-                    LoginResult(true)
+
+                val hasSessionCookie = ApiClient.cookieJar.getCookiesAsString().contains("next-auth.session-token") ||
+                                      ApiClient.cookieJar.getCookiesAsString().contains("__Secure-next-auth.session-token")
+
+                if (response.isSuccessful && hasSessionCookie) {
+                    return@withContext LoginResult(true)
                 } else {
                     val errorBody = response.body()?.string() ?: ""
-                    LoginResult(false, "Server error: ${response.code()} - $errorBody")
+                    ApiClient.cookieJar.clear()
+                    return@withContext LoginResult(false, "Server error: ${response.code()} - $errorBody")
                 }
             } catch (e: IOException) {
                 e.printStackTrace()
-                LoginResult(false, "Network error: ${e.message}")
+                ApiClient.cookieJar.clear()
+                return@withContext LoginResult(false, "Network error: ${e.message}")
             }
         }
     }
