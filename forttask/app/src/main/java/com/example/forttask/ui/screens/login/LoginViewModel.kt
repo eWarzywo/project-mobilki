@@ -10,6 +10,7 @@ import com.example.forttask.CredentialsApplication
 import com.example.forttask.data.entity.Credentials
 import com.example.forttask.data.repository.CredentialsRepository
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 class LoginViewModel(
@@ -29,6 +30,17 @@ class LoginViewModel(
     fun saveCredentials(credentials: Credentials) {
         viewModelScope.launch {
             credentialsRepository.insert(credentials)
+        }
+    }
+
+    suspend fun checkDuplicateCredentials(username: String): Credentials? {
+        val allCredentials = credentialsRepository.getAllCredentials().first()
+        return allCredentials.find { it.username == username }
+    }
+
+    fun updateCredentials(credentials: Credentials) {
+        viewModelScope.launch {
+            credentialsRepository.update(credentials)
         }
     }
 

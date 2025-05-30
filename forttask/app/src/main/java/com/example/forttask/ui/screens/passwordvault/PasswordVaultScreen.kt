@@ -36,7 +36,7 @@ fun PasswordVaultScreen(
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(
-                            imageVector = androidx.compose.material.icons.Icons.AutoMirrored.Filled.ArrowBack,
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back"
                         )
                     }
@@ -57,7 +57,6 @@ fun PasswordVaultScreen(
                 CredentialsList(
                     credentials = uiState.credentialsList,
                     onCredentialSelected = { username, password ->
-                        // Return selected credentials back to login screen
                         navController.previousBackStackEntry?.savedStateHandle?.set(
                             "selectedUsername", username
                         )
@@ -134,7 +133,7 @@ private fun CredentialItem(
                     overflow = TextOverflow.Ellipsis
                 )
                 Text(
-                    text = "••••••••", // Masked password
+                    text = "••••••••",
                     style = MaterialTheme.typography.bodyMedium
                 )
             }

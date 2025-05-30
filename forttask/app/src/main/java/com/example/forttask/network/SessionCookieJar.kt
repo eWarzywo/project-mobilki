@@ -33,4 +33,8 @@ class SessionCookieJar : CookieJar {
             }
         }
     }
+
+    fun clear() {
+        cookieStore.clear()
+    }
 }

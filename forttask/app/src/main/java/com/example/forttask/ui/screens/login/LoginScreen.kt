@@ -50,11 +50,14 @@ fun LoginScreen(
     var password by remember { mutableStateOf("") }
     var isLoginSuccessful by remember { mutableStateOf(false) }
     var showSaveCredentialsDialog by remember { mutableStateOf(false) }
+    var showUpdateCredentialsDialog by remember { mutableStateOf(false) }
+    var duplicateCredentials by remember { mutableStateOf<Credentials?>(null) }
     val context = LocalContext.current
     val scrollState = rememberScrollState()
     val hasCredentials by remember { viewModel.hasCredentials }
 
-    // Listen for credentials selected from password vault
+    var isComingFromVault by remember { mutableStateOf(false) }
+
     val navBackStackEntry = navController.currentBackStackEntry
     LaunchedEffect(navBackStackEntry) {
         val savedStateHandle = navBackStackEntry?.savedStateHandle
@@ -64,6 +67,7 @@ fun LoginScreen(
         if (selectedUsername != null && selectedPassword != null) {
             username = selectedUsername
             password = selectedPassword
+            isComingFromVault = true
             savedStateHandle.remove<String>("selectedUsername")
             savedStateHandle.remove<String>("selectedPassword")
         }
@@ -73,7 +77,6 @@ fun LoginScreen(
         SaveCredentialsDialog(
             onDismiss = {
                 showSaveCredentialsDialog = false
-                // Navigate to Overview after user dismisses the dialog
                 if (isLoginSuccessful) {
                     navController.navigate(NavigationItem.Overview.route) {
                         popUpTo(NavigationItem.Login.route) { inclusive = true }
@@ -81,14 +84,52 @@ fun LoginScreen(
                 }
             },
             onConfirm = {
-                viewModel.saveCredentials(
-                    Credentials(
+                scope.launch {
+                    val existingCredentials = viewModel.checkDuplicateCredentials(username)
+                    if (existingCredentials != null) {
+                        duplicateCredentials = existingCredentials
+                        showUpdateCredentialsDialog = true
+                        showSaveCredentialsDialog = false
+                    } else {
+                        viewModel.saveCredentials(
+                            Credentials(
+                                username = username,
+                                password = password
+                            )
+                        )
+                        showSaveCredentialsDialog = false
+                        if (isLoginSuccessful) {
+                            navController.navigate(NavigationItem.Overview.route) {
+                                popUpTo(NavigationItem.Login.route) { inclusive = true }
+                            }
+                        }
+                    }
+                }
+            }
+        )
+    }
+
+    if (showUpdateCredentialsDialog) {
+        UpdateCredentialsDialog(
+            username = username,
+            onDismiss = {
+                showUpdateCredentialsDialog = false
+                if (isLoginSuccessful) {
+                    navController.navigate(NavigationItem.Overview.route) {
+                        popUpTo(NavigationItem.Login.route) { inclusive = true }
+                    }
+                }
+            },
+            onConfirm = {
+                duplicateCredentials?.let { existingCredentials ->
+                    val updatedCredentials = Credentials(
+                        id = existingCredentials.id,
                         username = username,
                         password = password
                     )
-                )
-                showSaveCredentialsDialog = false
-                // Navigate to Overview after user confirms saving credentials
+                    viewModel.updateCredentials(updatedCredentials)
+                }
+                showUpdateCredentialsDialog = false
                 if (isLoginSuccessful) {
                     navController.navigate(NavigationItem.Overview.route) {
                         popUpTo(NavigationItem.Login.route) { inclusive = true }
@@ -98,9 +139,8 @@ fun LoginScreen(
         )
     }
 
-    // When login is successful and dialog is closed, if we need to navigate
-    LaunchedEffect(isLoginSuccessful, showSaveCredentialsDialog) {
-        if (isLoginSuccessful && !showSaveCredentialsDialog) {
+    LaunchedEffect(isLoginSuccessful, showSaveCredentialsDialog, showUpdateCredentialsDialog) {
+        if (isLoginSuccessful && !showSaveCredentialsDialog && !showUpdateCredentialsDialog) {
             navController.navigate(NavigationItem.Overview.route) {
                 popUpTo(NavigationItem.Login.route) { inclusive = true }
             }
@@ -145,13 +185,10 @@ fun LoginScreen(
                 scope.launch {
                     val result = AuthManager.login(context, username, password)
                     if (result.success) {
-                        Toast.makeText(context, "Login success", Toast.LENGTH_SHORT).show()
                         isLoginSuccessful = true
                         showSaveCredentialsDialog = true
-                        // Navigation is handled after dialog is dismissed
                     } else {
-                        val errorMessage = result.errorMessage ?: "Unknown error occurred"
-                        Toast.makeText(context, errorMessage, Toast.LENGTH_LONG).show()
+                        Toast.makeText(context, "Invalid credentials", Toast.LENGTH_LONG).show()
                     }
                 }
             },
@@ -162,7 +199,7 @@ fun LoginScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        if (hasCredentials) {
+        if (hasCredentials && !isComingFromVault) {
             TextButton(
                 onClick = { navController.navigate(NavigationItem.PasswordVault.route) },
                 modifier = Modifier.fillMaxWidth()
@@ -196,3 +233,27 @@ fun SaveCredentialsDialog(
         }
     )
 }
+
+@Composable
+fun UpdateCredentialsDialog(
+    username: String,
+    onDismiss: () -> Unit,
+    onConfirm: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Update Credentials") },
+        text = { Text("Credentials for '$username' already exist. Would you like to update them?") },
+        confirmButton = {
+            TextButton(onClick = onConfirm) {
+                Text("Update")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        }
+    )
+}
+
