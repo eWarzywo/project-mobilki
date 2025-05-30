@@ -22,16 +22,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import android.widget.Toast
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.example.forttask.CredentialsApplication
 import com.example.forttask.data.entity.Credentials
 import com.example.forttask.network.AuthManager
 import com.example.forttask.ui.navigation.NavigationItem
@@ -55,6 +58,7 @@ fun LoginScreen(
     val context = LocalContext.current
     val scrollState = rememberScrollState()
     val hasCredentials by remember { viewModel.hasCredentials }
+    var isLoading by remember { mutableStateOf(false) }
 
     var isComingFromVault by remember { mutableStateOf(false) }
 
@@ -147,68 +151,94 @@ fun LoginScreen(
         }
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(24.dp)
-            .verticalScroll(scrollState),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text(message)
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        OutlinedTextField(
-            value = username,
-            onValueChange = { username = it },
-            label = { Text("Username") },
-            singleLine = true,
+    Box(modifier = Modifier.fillMaxSize()) {
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 8.dp)
-        )
-
-        OutlinedTextField(
-            value = password,
-            onValueChange = { password = it },
-            label = { Text("Password") },
-            visualTransformation = PasswordVisualTransformation(),
-            singleLine = true,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 16.dp)
-        )
-
-        Button(
-            onClick = {
-                scope.launch {
-                    val result = AuthManager.login(context, username, password)
-                    if (result.success) {
-                        isLoginSuccessful = true
-                        showSaveCredentialsDialog = true
-                    } else {
-                        Toast.makeText(context, "Invalid credentials", Toast.LENGTH_LONG).show()
-                    }
-                }
-            },
-            modifier = Modifier.fillMaxWidth()
+                .fillMaxSize()
+                .padding(24.dp)
+                .verticalScroll(scrollState),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text("Login")
+            Text(
+                text = message,
+                style = MaterialTheme.typography.headlineMedium,
+                modifier = Modifier.padding(bottom = 16.dp)
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            OutlinedTextField(
+                value = username,
+                onValueChange = { username = it },
+                label = { Text("Username") },
+                singleLine = true,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 8.dp),
+                enabled = !isLoading
+            )
+
+            OutlinedTextField(
+                value = password,
+                onValueChange = { password = it },
+                label = { Text("Password") },
+                visualTransformation = PasswordVisualTransformation(),
+                singleLine = true,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp),
+                enabled = !isLoading
+            )
+
+            Button(
+                onClick = {
+                    scope.launch {
+                        isLoading = true
+                        try {
+                            val result = AuthManager.login(context, username, password)
+                            if (result.success) {
+                                isLoginSuccessful = true
+                                showSaveCredentialsDialog = true
+                            } else {
+                                Toast.makeText(context, result.errorMessage ?: "Invalid credentials", Toast.LENGTH_LONG).show()
+                            }
+                        } finally {
+                            isLoading = false
+                        }
+                    }
+                },
+                modifier = Modifier.fillMaxWidth(),
+                enabled = !isLoading && username.isNotBlank() && password.isNotBlank()
+            ) {
+                Text("Login")
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            if (hasCredentials && !isComingFromVault) {
+                TextButton(
+                    onClick = { navController.navigate(NavigationItem.PasswordVault.route) },
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = !isLoading
+                ) {
+                    Text("Open Password Vault")
+                }
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
-
-        if (hasCredentials && !isComingFromVault) {
-            TextButton(
-                onClick = { navController.navigate(NavigationItem.PasswordVault.route) },
-                modifier = Modifier.fillMaxWidth()
+        if (isLoading) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
             ) {
-                Text("Open Password Vault")
+                CircularProgressIndicator(
+                    modifier = Modifier.size(48.dp)
+                )
             }
         }
-
-        Spacer(modifier = Modifier.height(24.dp))
     }
 }
 
@@ -256,4 +286,3 @@ fun UpdateCredentialsDialog(
         }
     )
 }
-
