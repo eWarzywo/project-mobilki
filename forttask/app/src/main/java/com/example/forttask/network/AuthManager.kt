@@ -1,40 +1,43 @@
 package com.example.forttask.network
 
 import android.content.Context
+import com.example.forttask.BuildConfig
+import java.io.IOException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.FormBody
 import okhttp3.Request
-import java.io.IOException
 
-data class LoginResult(
-    val success: Boolean,
-    val errorMessage: String? = null
-)
+data class LoginResult(val success: Boolean, val errorMessage: String? = null)
 
 object AuthManager {
-    private const val SERVER_IP = "10.90.83.206"
-    private const val SERVER_PORT = "3000"
-    private const val SERVER_URL = "http://$SERVER_IP:$SERVER_PORT"
+    private val SERVER_URL = BuildConfig.FULL_URL
 
     suspend fun csrf(context: Context): Pair<String?, String?> {
         return withContext(Dispatchers.IO) {
             try {
                 val client = ApiClient.getHttpClient()
-                val request = Request.Builder()
-                    .url("$SERVER_URL/api/auth/csrf")
-                    .header("Host", "$SERVER_IP:$SERVER_PORT")
-                    .build()
+                val request =
+                        Request.Builder()
+                                .url("$SERVER_URL/api/auth/csrf")
+                                .header("Host", SERVER_URL.toString())
+                                .build()
 
                 val response = client.newCall(request).execute()
                 if (response.isSuccessful) {
                     val body = response.body()?.string()
                     val cookieHeader = response.headers("Set-Cookie")
-                    val csrfCookie = cookieHeader.firstOrNull { it.startsWith("next-auth.csrf-token") }
-                        ?.split(";")?.firstOrNull()
-                    return@withContext Pair(body?.let {
-                        Regex("\"csrfToken\":\"([^\"]+)\"").find(it)?.groupValues?.get(1)
-                    }, csrfCookie)
+                    val csrfCookie =
+                            cookieHeader
+                                    .firstOrNull { it.startsWith("next-auth.csrf-token") }
+                                    ?.split(";")
+                                    ?.firstOrNull()
+                    return@withContext Pair(
+                            body?.let {
+                                Regex("\"csrfToken\":\"([^\"]+)\"").find(it)?.groupValues?.get(1)
+                            },
+                            csrfCookie
+                    )
                 } else {
                     Pair(null, null)
                 }
@@ -55,31 +58,41 @@ object AuthManager {
                 return@withContext LoginResult(false, "Failed to retrieve CSRF token or cookie.")
             }
 
-            val formBody = FormBody.Builder()
-                .add("csrfToken", csrfToken)
-                .add("username", username)
-                .add("password", password)
-                .build()
+            val formBody =
+                    FormBody.Builder()
+                            .add("csrfToken", csrfToken)
+                            .add("username", username)
+                            .add("password", password)
+                            .build()
 
-            val request = Request.Builder()
-                .url("$SERVER_URL/api/auth/callback/credentials")
-                .header("Content-Type", "application/x-www-form-urlencoded")
-                .header("Cookie", csrfCookie)
-                .post(formBody)
-                .build()
+            val request =
+                    Request.Builder()
+                            .url("$SERVER_URL/api/auth/callback/credentials")
+                            .header("Content-Type", "application/x-www-form-urlencoded")
+                            .header("Cookie", csrfCookie)
+                            .post(formBody)
+                            .build()
 
             try {
                 val response = client.newCall(request).execute()
 
-                val hasSessionCookie = ApiClient.cookieJar.getCookiesAsString().contains("next-auth.session-token") ||
-                                      ApiClient.cookieJar.getCookiesAsString().contains("__Secure-next-auth.session-token")
+                val hasSessionCookie =
+                        ApiClient.cookieJar
+                                .getCookiesAsString()
+                                .contains("next-auth.session-token") ||
+                                ApiClient.cookieJar
+                                        .getCookiesAsString()
+                                        .contains("__Secure-next-auth.session-token")
 
                 if (response.isSuccessful && hasSessionCookie) {
                     return@withContext LoginResult(true)
                 } else {
                     val errorBody = response.body()?.string() ?: ""
                     ApiClient.cookieJar.clear()
-                    return@withContext LoginResult(false, "Server error: ${response.code()} - $errorBody")
+                    return@withContext LoginResult(
+                            false,
+                            "Server error: ${response.code()} - $errorBody"
+                    )
                 }
             } catch (e: IOException) {
                 e.printStackTrace()
@@ -89,4 +102,3 @@ object AuthManager {
         }
     }
 }
-
