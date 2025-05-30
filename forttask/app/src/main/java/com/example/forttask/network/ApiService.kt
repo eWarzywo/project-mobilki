@@ -1,6 +1,7 @@
 package com.example.forttask.network
 
 import android.content.Context
+import com.example.forttask.BuildConfig
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import timber.log.Timber
@@ -10,7 +11,7 @@ object ApiService {
     suspend fun getProtectedData(context: Context, uri: String): String? {
         return withContext(Dispatchers.IO) {
             val client = ApiClient.getHttpClient()
-            val fullUrl = "http://10.90.83.206:3000/api/$uri"
+            val fullUrl = "${BuildConfig.FULL_URL}/api/$uri"
             val request = ApiClient.getAuthenticatedRequest(context, fullUrl)
             
             Timber.d("🔄 API Request: GET $fullUrl")
