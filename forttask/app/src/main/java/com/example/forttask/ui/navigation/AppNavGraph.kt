@@ -12,6 +12,7 @@ import com.example.forttask.ui.screens.login.LoginScreen
 import com.example.forttask.ui.screens.bills.BillsScreen
 import com.example.forttask.ui.screens.shoppinglist.ShoppingListScreen
 import com.example.forttask.ui.screens.chores.ChoresScreen
+import com.example.forttask.ui.screens.passwordvault.PasswordVaultScreen
 
 enum class Screen {
     OVERVIEW,
@@ -20,6 +21,7 @@ enum class Screen {
     CHORES,
     BILLS,
     SHOPPING_LIST,
+    PASSWORD_VAULT,
 }
 
 sealed class NavigationItem(val route: String) {
@@ -29,6 +31,7 @@ sealed class NavigationItem(val route: String) {
     object Chores : NavigationItem(Screen.CHORES.name)
     object Bills : NavigationItem(Screen.BILLS.name)
     object ShoppingList : NavigationItem(Screen.SHOPPING_LIST.name)
+    object PasswordVault : NavigationItem(Screen.PASSWORD_VAULT.name)
 }
 
 @Composable
@@ -59,6 +62,9 @@ fun AppNavHost(
         }
         composable(NavigationItem.ShoppingList.route) {
             ShoppingListScreen()
+        }
+        composable(NavigationItem.PasswordVault.route) {
+            PasswordVaultScreen(navController = navController)
         }
     }
 }
