@@ -19,51 +19,47 @@ import com.example.forttask.data.entity.Credentials
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PasswordVaultScreen(
-    navController: NavController,
-    modifier: Modifier = Modifier,
-    viewModel: PasswordVaultViewModel = viewModel(
-        factory = PasswordVaultViewModel.Factory
-    )
+        navController: NavController,
+        viewModel: PasswordVaultViewModel = viewModel(factory = PasswordVaultViewModel.Factory)
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Password Vault") },
-                navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back"
-                        )
-                    }
-                }
-            )
-        }
+            topBar = {
+                TopAppBar(
+                        title = { Text("Password Vault") },
+                        navigationIcon = {
+                            IconButton(onClick = { navController.popBackStack() }) {
+                                Icon(
+                                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                        contentDescription = "Back"
+                                )
+                            }
+                        }
+                )
+            }
     ) { paddingValues ->
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+                modifier = Modifier.fillMaxSize().padding(paddingValues).padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
         ) {
             if (uiState.credentialsList.isEmpty()) {
                 EmptyVaultContent()
             } else {
                 CredentialsList(
-                    credentials = uiState.credentialsList,
-                    onCredentialSelected = { username, password ->
-                        navController.previousBackStackEntry?.savedStateHandle?.set(
-                            "selectedUsername", username
-                        )
-                        navController.previousBackStackEntry?.savedStateHandle?.set(
-                            "selectedPassword", password
-                        )
-                        navController.popBackStack()
-                    },
-                    onDeleteCredential = { viewModel.deleteCredentials(it) }
+                        credentials = uiState.credentialsList,
+                        onCredentialSelected = { username, password ->
+                            navController.previousBackStackEntry?.savedStateHandle?.set(
+                                    "selectedUsername",
+                                    username
+                            )
+                            navController.previousBackStackEntry?.savedStateHandle?.set(
+                                    "selectedPassword",
+                                    password
+                            )
+                            navController.popBackStack()
+                        },
+                        onDeleteCredential = { viewModel.deleteCredentials(it) }
                 )
             }
         }
@@ -72,32 +68,26 @@ fun PasswordVaultScreen(
 
 @Composable
 private fun EmptyVaultContent() {
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = "No saved credentials found",
-            style = MaterialTheme.typography.bodyLarge
-        )
+    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        Text(text = "No saved credentials found", style = MaterialTheme.typography.bodyLarge)
     }
 }
 
 @Composable
 private fun CredentialsList(
-    credentials: List<Credentials>,
-    onCredentialSelected: (String, String) -> Unit,
-    onDeleteCredential: (Credentials) -> Unit
+        credentials: List<Credentials>,
+        onCredentialSelected: (String, String) -> Unit,
+        onDeleteCredential: (Credentials) -> Unit
 ) {
     LazyColumn(
-        modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         items(credentials, key = { it.id }) { credential ->
             CredentialItem(
-                credential = credential,
-                onCredentialSelected = onCredentialSelected,
-                onDeleteCredential = onDeleteCredential
+                    credential = credential,
+                    onCredentialSelected = onCredentialSelected,
+                    onDeleteCredential = onDeleteCredential
             )
         }
     }
@@ -105,42 +95,30 @@ private fun CredentialsList(
 
 @Composable
 private fun CredentialItem(
-    credential: Credentials,
-    onCredentialSelected: (String, String) -> Unit,
-    onDeleteCredential: (Credentials) -> Unit
+        credential: Credentials,
+        onCredentialSelected: (String, String) -> Unit,
+        onDeleteCredential: (Credentials) -> Unit
 ) {
     ElevatedCard(
-        modifier = Modifier.fillMaxWidth(),
-        onClick = { onCredentialSelected(credential.username, credential.password) }
+            modifier = Modifier.fillMaxWidth(),
+            onClick = { onCredentialSelected(credential.username, credential.password) }
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
+                modifier = Modifier.fillMaxWidth().padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically
         ) {
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(end = 8.dp)
-            ) {
+            Column(modifier = Modifier.weight(1f).padding(end = 8.dp)) {
                 Text(
-                    text = credential.username,
-                    style = MaterialTheme.typography.titleMedium,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
+                        text = credential.username,
+                        style = MaterialTheme.typography.titleMedium,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                 )
-                Text(
-                    text = "••••••••",
-                    style = MaterialTheme.typography.bodyMedium
-                )
+                Text(text = "••••••••", style = MaterialTheme.typography.bodyMedium)
             }
 
             IconButton(onClick = { onDeleteCredential(credential) }) {
-                Icon(
-                    imageVector = Icons.Default.Delete,
-                    contentDescription = "Delete credential"
-                )
+                Icon(imageVector = Icons.Default.Delete, contentDescription = "Delete credential")
             }
         }
     }

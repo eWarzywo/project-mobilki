@@ -4,13 +4,22 @@
 
 FortTask is a comprehensive household management Android application built with Kotlin and Jetpack Compose. The app enables families and household members to efficiently organize their daily tasks, manage expenses, coordinate events, maintain shopping lists, and securely store credentials - all in one centralized platform.
 
+**Last Updated**: May 2025  
+**Version**: 1.0.0  
+**Target SDK**: Android 34+
+
 ### 🌟 Key Features
 
 -   **📋 Chores Management**: Create, assign, and track household tasks with priority levels and due dates
 -   **💰 Bills Tracking**: Monitor upcoming bills, due dates, and payment amounts with overdue notifications
 -   **📅 Events Scheduling**: Plan and coordinate household events with attendee management
 -   **🛒 Shopping Lists**: Collaborative shopping list creation with cost tracking
--   **🔐 Password Vault**: Secure local storage for credentials with quick login integration
+-   **🔐 Password Vault**: Secure local storage for credentials with quick login integration and credential management
+    -   Local encrypted storage using Room database
+    -   Quick credential selection and auto-fill functionality
+    -   Secure credential deletion with confirmation
+    -   Material Design 3 card-based interface
+    -   Easy navigation back to login screen with selected credentials
 -   **🏠 Multi-Household Support**: Support for multiple household environments
 -   **🔄 Real-time Updates**: Live synchronization across devices using Socket.IO
 -   **📱 Responsive Design**: Adaptive UI supporting both compact and expanded layouts
@@ -76,14 +85,21 @@ erDiagram
         int id PK "Auto-generated primary key"
         string username "User login credential"
         string password "Encrypted password"
+        string created_at "Timestamp of credential creation"
+        string updated_at "Timestamp of last modification"
     }
 ```
 
 ### **Credentials Entity**
 
--   **Purpose**: Secure local storage of user login credentials
--   **Security**: Passwords stored with encryption
--   **Usage**: Quick login functionality and credential management
+-   **Purpose**: Secure local storage of user login credentials for quick access
+-   **Security**: Passwords stored with encryption in local Room database
+-   **Usage**: Quick login functionality, credential management, and auto-fill integration
+-   **Features**:
+    -   CRUD operations with Repository pattern
+    -   Lazy loading with efficient memory management
+    -   Secure deletion with proper cleanup
+    -   Integration with login screens via Navigation Component
 
 ### Remote Database Entities (API Models)
 
@@ -158,6 +174,8 @@ data class ShoppingItem(
 ```mermaid
 graph TD
     A[Login Screen] --> B[Overview/Dashboard]
+    A --> G[Password Vault Screen]
+    G --> A
     B --> C[Events Screen]
     B --> D[Chores Screen]
     B --> E[Bills Screen]
@@ -172,6 +190,10 @@ graph TD
     C --> C1[Event Details]
     E --> E1[Bill Details]
     D --> D1[Chore Details]
+
+    G --> G1[Select Credential]
+    G1 --> A
+    G --> G2[Delete Credential]
 ```
 
 ### **Navigation Structure**
@@ -228,9 +250,14 @@ graph TD
 
 **Password Vault Screen:**
 
--   Secure credential storage
--   Quick login integration
--   Local encryption and data protection
+-   Secure credential storage with local Room database
+-   Material Design 3 elevated cards for credential display
+-   Username display with masked password (••••••••)
+-   Single-tap credential selection for auto-fill
+-   Secure deletion with dedicated delete buttons
+-   Empty state handling with user-friendly messaging
+-   Navigation integration with savedStateHandle for data passing
+-   Responsive layout with lazy loading for large credential lists
 
 ## 🔄 Real-time Features
 
@@ -245,6 +272,26 @@ graph TD
 -   **Chores**: Instant updates when tasks are created, modified, or completed
 -   **Events**: Real-time event creation and modification notifications
 -   **Bills**: Live bill status updates and payment tracking
+
+## 🎯 Current Implementation Status
+
+### ✅ Completed Features
+
+-   **Password Vault System**: Fully implemented with secure local storage
+-   **Material Design 3 UI**: Modern, responsive interface across all screens
+-   **Navigation System**: Complete navigation flow with proper state management
+-   **Real-time Updates**: Socket.IO integration for live data synchronization
+-   **Local Database**: Room database with encryption for secure data storage
+-   **Authentication Flow**: JWT-based login with session management
+
+### 🚧 Development Architecture
+
+The application follows clean architecture principles with:
+
+-   **MVVM Pattern**: Clear separation between UI, business logic, and data layers
+-   **Repository Pattern**: Centralized data management with local and remote sources
+-   **Dependency Injection**: Structured dependency management
+-   **State Management**: Reactive programming with Kotlin Flow and Compose State
 
 ## 🛡️ Security Features
 
@@ -280,13 +327,16 @@ implementation 'androidx.activity:activity-compose:1.8.2'
 // Jetpack Compose
 implementation platform('androidx.compose:compose-bom:2024.02.00')
 implementation 'androidx.compose.ui:ui'
+implementation 'androidx.compose.ui:ui-tooling-preview'
 implementation 'androidx.compose.material3:material3'
+implementation 'androidx.compose.material:material-icons-extended'
 implementation 'androidx.navigation:navigation-compose'
+implementation 'androidx.lifecycle:lifecycle-viewmodel-compose'
 
 // Database
 implementation 'androidx.room:room-runtime:2.6.1'
 implementation 'androidx.room:room-ktx:2.6.1'
-kapt 'androidx.room:room-compiler:2.6.1'
+ksp 'androidx.room:room-compiler:2.6.1'
 
 // Networking
 implementation 'com.squareup.retrofit2:retrofit:2.9.0'
@@ -300,11 +350,32 @@ implementation 'com.jakewharton.timber:timber:5.0.1'
 
 ### **Installation Steps**
 
-1. Clone the repository
-2. Open in Android Studio
-3. Configure `FULL_URL` in `gradle.properties` with your backend URL
-4. Sync Gradle dependencies
-5. Build and run on device/emulator
+1. **Clone the repository**
+
+    ```bash
+    git clone <repository-url>
+    cd project-mobilki/forttask
+    ```
+
+2. **Open in Android Studio**
+
+    - Launch Android Studio Hedgehog or later
+    - Open the `forttask` folder as project
+
+3. **Configure Backend URL**
+
+    - Set `FULL_URL` in `gradle.properties` with your backend URL
+    - Update Socket.IO server endpoints if needed
+
+4. **Sync and Build**
+
+    ```bash
+    ./gradlew build
+    ```
+
+5. **Run on Device/Emulator**
+    - Connect Android device or start emulator
+    - Click Run or use `./gradlew installDebug`
 
 ### **Configuration**
 
@@ -314,7 +385,25 @@ implementation 'com.jakewharton.timber:timber:5.0.1'
 
 ## 🤝 Contributing
 
-This project was developed collaboratively by the team members listed above. For any questions or contributions, please contact the development team.
+This project was developed collaboratively by the team members listed above. The codebase follows modern Android development practices with Kotlin and Jetpack Compose.
+
+### Development Guidelines
+
+-   **Code Style**: Follow Kotlin coding conventions
+-   **Architecture**: Maintain MVVM pattern and clean architecture
+-   **Testing**: Include unit tests for business logic
+-   **Documentation**: Update README for significant changes
+
+For any questions, improvements, or contributions, please contact the development team.
+
+## 📊 Project Statistics
+
+-   **Language**: 100% Kotlin
+-   **UI Framework**: Jetpack Compose with Material Design 3
+-   **Architecture**: MVVM with Repository Pattern
+-   **Database**: Room (Local) + REST API (Remote)
+-   **Minimum SDK**: 34 (Android 14)
+-   **Target SDK**: 34
 
 ---
 
