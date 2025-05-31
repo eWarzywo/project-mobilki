@@ -24,7 +24,7 @@ FortTask is a comprehensive household management Android application built with 
 -   **Backend Integration**: Implemented fetching session along with JWT token
 -   **Real-time Updates**: Developed Socket.IO integration for live updates
 -   **Network Management**: Built robust networking components with error handling
--   **Local database**: Created database for storing loging keys
+-   **Local Database**: Created database for storing loging keys
 -   **Login Integration**: Implemented loging functionality with stored keys
 -   **Navigation Menu**: Created menu for navigating through app
 
@@ -107,7 +107,7 @@ data class Chore(
     val name: String,
     val description: String,
     val dueDate: String,
-    val priority: Int, // 1=Low, 2=Medium, 3=High, 4=Urgent
+    val priority: Int, // 1=Low, 2=Medium, 3=High, 4=Urgent, 5=Critical
     val done: Boolean,
     val createdBy: CreatedBy?,
     val doneBy: CreatedBy?
@@ -162,7 +162,6 @@ graph TD
     B --> D[Chores Screen]
     B --> E[Bills Screen]
     B --> F[Shopping List Screen]
-    B --> G[Password Vault Screen]
 
     D --> D1[Todo Chores]
     D --> D2[Completed Chores]
@@ -170,19 +169,9 @@ graph TD
     E --> E1[Upcoming Bills]
     E --> E2[Overdue Bills]
 
-    G --> A1[Auto-fill Login]
-
     C --> C1[Event Details]
     E --> E1[Bill Details]
     D --> D1[Chore Details]
-
-    style A fill:#e1f5fe
-    style B fill:#e8f5e8
-    style C fill:#fff3e0
-    style D fill:#f3e5f5
-    style E fill:#ffebee
-    style F fill:#e0f2f1
-    style G fill:#fce4ec
 ```
 
 ### **Navigation Structure**
@@ -200,7 +189,6 @@ graph TD
 -   **Chores**: Task management with filtering (Todo/Done)
 -   **Bills**: Financial tracking with overdue notifications
 -   **Shopping List**: Collaborative shopping management
--   **Password Vault**: Secure credential storage
 
 #### **3. Screen-Specific Features**
 
@@ -323,35 +311,6 @@ implementation 'com.jakewharton.timber:timber:5.0.1'
 -   **Backend URL**: Set your API endpoint in build configuration
 -   **Socket Connection**: Configure Socket.IO server endpoint
 -   **Database**: Room database auto-initializes on first launch
-
-## 🧪 Testing
-
-The application includes comprehensive testing for:
-
--   **Unit Tests**: Core business logic and data models
--   **Integration Tests**: API communication and database operations
--   **UI Tests**: Screen navigation and user interactions
-
-## 📈 Future Enhancements
-
--   [ ] Push notifications for overdue bills and upcoming events
--   [ ] Advanced calendar integration with external calendar apps
--   [ ] Photo attachments for chores and shopping items
--   [ ] Expense analytics and reporting
--   [ ] Multi-language support
--   [ ] Dark/Light theme customization
--   [ ] Offline mode with data synchronization
--   [ ] Voice input for quick task creation
-
-## 🐛 Known Issues
-
--   Socket.IO reconnection may require app restart in some network conditions
--   Large shopping lists may experience minor performance impacts
--   Date formatting may vary based on device locale settings
-
-## 📄 License
-
-This project is developed as part of a mobile development course and is for educational purposes.
 
 ## 🤝 Contributing
 
