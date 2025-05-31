@@ -43,7 +43,6 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun LoginScreen(
-        modifier: Modifier = Modifier,
         navController: NavController,
         viewModel: LoginViewModel = viewModel(factory = LoginViewModel.Factory)
 ) {
@@ -210,7 +209,6 @@ fun LoginScreen(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Signup link
             TextButton(
                     onClick = {
                         val signupUrl = "${BuildConfig.FULL_URL}/signup"

@@ -31,16 +31,13 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun ChoreItemCard(
-    chore: Chore,
-    modifier: Modifier = Modifier
-) {
+fun ChoreItemCard(chore: Chore, modifier: Modifier = Modifier) {
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
             containerColor = if (chore.done) {
-                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                MaterialTheme.colorScheme.secondaryContainer
             } else if (chore.isOverdue()) {
                 MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f)
             } else {
@@ -60,15 +57,13 @@ fun ChoreItemCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Column(modifier = Modifier.weight(1f)) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(
                             text = chore.name,
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold,
                             color = if (chore.done) {
-                                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                                MaterialTheme.colorScheme.onSurface
                             } else {
                                 MaterialTheme.colorScheme.onSurface
                             },
@@ -76,7 +71,7 @@ fun ChoreItemCard(
                             maxLines = 2,
                             overflow = TextOverflow.Ellipsis
                         )
-                        
+
                         if (chore.isOverdue() && !chore.done) {
                             Icon(
                                 imageVector = Icons.Default.Warning,
@@ -86,17 +81,17 @@ fun ChoreItemCard(
                             )
                         }
                     }
-                    
+
                     Spacer(modifier = Modifier.height(4.dp))
-                    
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
+
+                    Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
                             imageVector = Icons.Default.Schedule,
                             contentDescription = null,
                             modifier = Modifier.size(16.dp),
-                            tint = if (chore.isOverdue() && !chore.done) {
+                            tint = if (chore.done) {
+                                MaterialTheme.colorScheme.primary
+                            } else if (chore.isOverdue() && !chore.done) {
                                 MaterialTheme.colorScheme.error
                             } else {
                                 MaterialTheme.colorScheme.primary
@@ -106,27 +101,32 @@ fun ChoreItemCard(
                         Text(
                             text = "Due: ${chore.getFormattedDueDate()}",
                             style = MaterialTheme.typography.bodyMedium,
-                            color = if (chore.isOverdue() && !chore.done) {
+                            color = if (chore.done) {
+                                MaterialTheme.colorScheme.primary
+                            } else if (chore.isOverdue() && !chore.done) {
                                 MaterialTheme.colorScheme.error
                             } else {
                                 MaterialTheme.colorScheme.primary
                             },
                             fontWeight = FontWeight.Medium
                         )
-                        
+
                         Spacer(modifier = Modifier.width(8.dp))
-                        
+
                         Box(
                             modifier = Modifier
                                 .size(8.dp)
                                 .background(
-                                    color = Color(android.graphics.Color.parseColor(chore.getPriorityColor())),
-                                    shape = CircleShape
+                                    color = Color(
+                                        android.graphics.Color.parseColor(
+                                            chore.getPriorityColor()
+                                        )
+                                    ), shape = CircleShape
                                 )
                         )
-                        
+
                         Spacer(modifier = Modifier.width(4.dp))
-                        
+
                         Text(
                             text = chore.getPriorityDisplay(),
                             style = MaterialTheme.typography.bodySmall,
@@ -134,7 +134,7 @@ fun ChoreItemCard(
                             fontWeight = FontWeight.Medium
                         )
                     }
-                    
+
                     if (chore.description.isNotBlank()) {
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
@@ -145,17 +145,19 @@ fun ChoreItemCard(
                             overflow = TextOverflow.Ellipsis
                         )
                     }
-                    
+
                     chore.createdBy?.let { creator ->
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
                             text = "Created by ${creator.username}",
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(
+                                alpha = 0.8f
+                            )
                         )
                     }
                 }
-                
+
                 if (chore.done) {
                     Icon(
                         imageVector = Icons.Default.CheckCircle,
@@ -172,7 +174,7 @@ fun ChoreItemCard(
                     )
                 }
             }
-            
+
             if (chore.done && chore.doneBy != null) {
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
