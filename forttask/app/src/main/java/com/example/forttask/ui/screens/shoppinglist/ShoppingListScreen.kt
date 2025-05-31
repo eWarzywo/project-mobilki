@@ -530,7 +530,7 @@ private fun TotalCostCard(
                     }
                 )
                 Text(
-                    text = "${"%.2f".format(totalCost)}",
+                    text = "%.2f".format(totalCost),
                     style = MaterialTheme.typography.headlineSmall,
                     color = when (currentFilter) {
                         ShoppingFilter.BOUGHT -> MaterialTheme.colorScheme.onSecondaryContainer
