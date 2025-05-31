@@ -4,24 +4,28 @@
 
 FortTask is a comprehensive household management Android application built with Kotlin and Jetpack Compose. The app enables families and household members to efficiently organize their daily tasks, manage expenses, coordinate events, maintain shopping lists, and securely store credentials - all in one centralized platform.
 
+> **📖 Read-Only Application**: This application is currently in read-only mode. Users can view and browse all household data (chores, bills, events, shopping lists) but cannot create, modify, or delete items through the mobile interface. Data modifications are handled through the backend system.
+
+> **🌐 Web App Dependency**: This mobile app requires the **FortTask Web Application** for full functionality. The web app serves as the complete management platform where users can create, edit, and delete household data. This mobile app acts as a companion viewer for the web-based system.
+
 **Last Updated**: May 2025  
 **Version**: 1.0.0  
 **Target SDK**: Android 34+
 
 ### 🌟 Key Features
 
--   **📋 Chores Management**: Create, assign, and track household tasks with priority levels and due dates
--   **💰 Bills Tracking**: Monitor upcoming bills, due dates, and payment amounts with overdue notifications
--   **📅 Events Scheduling**: Plan and coordinate household events with attendee management
--   **🛒 Shopping Lists**: Collaborative shopping list creation with cost tracking
+-   **📋 Chores Management**: View and track household tasks with priority levels and due dates (read-only)
+-   **💰 Bills Tracking**: Monitor upcoming bills, due dates, and payment amounts with overdue notifications (read-only)
+-   **📅 Events Scheduling**: View and browse household events with attendee information (read-only)
+-   **🛒 Shopping Lists**: View collaborative shopping lists with cost tracking (read-only)
 -   **🔐 Password Vault**: Secure local storage for credentials with quick login integration and credential management
     -   Local encrypted storage using Room database
     -   Quick credential selection and auto-fill functionality
     -   Secure credential deletion with confirmation
     -   Material Design 3 card-based interface
     -   Easy navigation back to login screen with selected credentials
--   **🏠 Multi-Household Support**: Support for multiple household environments
--   **🔄 Real-time Updates**: Live synchronization across devices using Socket.IO
+-   **🏠 Multi-Household Support**: Support for viewing multiple household environments
+-   **🔄 Real-time Updates**: Live synchronization for data viewing across devices using Socket.IO
 -   **📱 Responsive Design**: Adaptive UI supporting both compact and expanded layouts
 
 ## 👥 Development Team
@@ -85,8 +89,6 @@ erDiagram
         int id PK "Auto-generated primary key"
         string username "User login credential"
         string password "Encrypted password"
-        string created_at "Timestamp of credential creation"
-        string updated_at "Timestamp of last modification"
     }
 ```
 
@@ -217,36 +219,36 @@ graph TD
 **Overview Screen:**
 
 -   Date selector with calendar integration
--   Quick summaries of upcoming events, chores, and bills
--   Recent shopping list items
--   Real-time data updates
+-   Quick summaries of upcoming events, chores, and bills (view-only)
+-   Recent shopping list items display
+-   Real-time data updates for viewing
 
 **Chores Screen:**
 
--   Filter toggle (Todo/Completed)
--   Priority-based color coding
+-   Filter toggle (Todo/Completed) for viewing
+-   Priority-based color coding display
 -   Due date tracking with overdue indicators
--   Assignment and completion tracking
+-   Assignment and completion status viewing
 
 **Bills Screen:**
 
--   Expandable bill cards with detailed information
+-   Expandable bill cards with detailed information (view-only)
 -   Overdue bill highlighting
 -   Amount formatting and due date calculations
--   Creation and modification tracking
+-   Creation and modification tracking display
 
 **Events Screen:**
 
--   Chronological event listing
--   Location and attendee information
+-   Chronological event listing (view-only)
+-   Location and attendee information display
 -   Date formatting and creation details
--   Real-time event updates
+-   Real-time event updates for viewing
 
 **Shopping List Screen:**
 
--   Cost calculation and formatting
--   Item addition with pricing
--   Creation date and user tracking
+-   Cost calculation and formatting display (view-only)
+-   Item viewing with pricing information
+-   Creation date and user tracking display
 
 **Password Vault Screen:**
 
@@ -277,12 +279,36 @@ graph TD
 
 ### ✅ Completed Features
 
--   **Password Vault System**: Fully implemented with secure local storage
+-   **Password Vault System**: Fully implemented with secure local storage (full CRUD functionality)
 -   **Material Design 3 UI**: Modern, responsive interface across all screens
 -   **Navigation System**: Complete navigation flow with proper state management
--   **Real-time Updates**: Socket.IO integration for live data synchronization
+-   **Real-time Updates**: Socket.IO integration for live data synchronization (read-only)
 -   **Local Database**: Room database with encryption for secure data storage
 -   **Authentication Flow**: JWT-based login with session management
+-   **Data Viewing**: Complete read-only access to all household management data
+
+### 🚧 Current Limitations
+
+-   **Read-Only Mode**: The application currently operates in read-only mode for household data
+-   **Data Modification**: Creating, editing, or deleting chores, bills, events, and shopping items is not available in the mobile app
+-   **Web App Requirement**: Full functionality requires access to the FortTask Web Application for data management
+-   **Backend Dependency**: All data modifications must be performed through the web-based interface
+-   **Password Vault Exception**: Only the Password Vault feature supports full CRUD operations locally
+
+### 🌐 FortTask Ecosystem
+
+This mobile application is part of a larger FortTask ecosystem:
+
+-   **🖥️ FortTask Web App**: Full-featured web application for complete household management
+    -   Create, edit, and delete all household data
+    -   Advanced administration and user management
+    -   Complete CRUD operations for all features
+    -   Primary data management interface
+-   **📱 FortTask Mobile App** (this app): Companion viewing application
+    -   Real-time data viewing and monitoring
+    -   Secure credential storage and management
+    -   Mobile-optimized interface for household data browsing
+    -   Quick access to household information on-the-go
 
 ### 🚧 Development Architecture
 
@@ -379,9 +405,16 @@ implementation 'com.jakewharton.timber:timber:5.0.1'
 
 ### **Configuration**
 
--   **Backend URL**: Set your API endpoint in build configuration
--   **Socket Connection**: Configure Socket.IO server endpoint
+-   **Backend URL**: Set your API endpoint in build configuration to connect to FortTask Web App backend
+-   **Socket Connection**: Configure Socket.IO server endpoint for real-time updates
 -   **Database**: Room database auto-initializes on first launch
+-   **Web App Integration**: Ensure FortTask Web Application is deployed and accessible for full functionality
+
+### **Requirements**
+
+-   **FortTask Web Application**: Required for creating and managing household data
+-   **Network Connection**: Required for real-time data synchronization
+-   **Backend Server**: FortTask API server must be running and accessible
 
 ## 🤝 Contributing
 
@@ -394,17 +427,15 @@ This project was developed collaboratively by the team members listed above. The
 -   **Testing**: Include unit tests for business logic
 -   **Documentation**: Update README for significant changes
 
-For any questions, improvements, or contributions, please contact the development team.
-
 ## 📊 Project Statistics
 
 -   **Language**: 100% Kotlin
 -   **UI Framework**: Jetpack Compose with Material Design 3
 -   **Architecture**: MVVM with Repository Pattern
 -   **Database**: Room (Local) + REST API (Remote)
--   **Minimum SDK**: 34 (Android 14)
+-   **Minimum SDK**: 34 (Android 15)
 -   **Target SDK**: 34
 
 ---
 
-**Built with ❤️ using Kotlin & Jetpack Compose**
+**Built with 🥀 using Kotlin & Jetpack Compose**
