@@ -32,6 +32,12 @@ FortTask is a comprehensive household management Android application built with 
 
 ### 🔄 Division of Work
 
+#### **Jakub Majdański**
+(`Majdanka`)
+
+- **Consulting**:
+Mentoring both Mateusz'es to prompt the AI faster
+
 #### **Mateusz Gliszczynski** (`apozjebus`)
 
 -   **Backend Integration**: Implemented fetching session along with JWT token
