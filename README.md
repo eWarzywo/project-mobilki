@@ -438,4 +438,4 @@ This project was developed collaboratively by the team members listed above. The
 
 ---
 
-**Built with 🥀 using Kotlin & Jetpack Compose**
+**Built with ⚓ using Kotlin & Jetpack Compose**
